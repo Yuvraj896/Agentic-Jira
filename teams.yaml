@@ -1,0 +1,8 @@
+teams:
+  AIM:
+    display_name: AIM
+    jira_filter: 'project = AIM'
+    aliases:
+      - AIM
+      - AIM team
+    verified: true
