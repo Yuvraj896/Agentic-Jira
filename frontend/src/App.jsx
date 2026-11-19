@@ -26,6 +26,46 @@ function StatusPill({ children }) {
   return <span className={`status status-${className}`}>{text}</span>;
 }
 
+const CHART_COLORS = ['#216649', '#f27a3d', '#7b61a8', '#d1a727', '#3f78a8', '#8c4f3e', '#68a35b'];
+
+function InsightChart({ visualization }) {
+  if (!visualization?.data?.length) return null;
+  const maximum = Math.max(...visualization.data.map((item) => item.value), 1);
+  const total = visualization.data.reduce((sum, item) => sum + item.value, 0);
+  let cursor = 0;
+  const gradient = visualization.data.map((item, index) => {
+    const start = cursor;
+    cursor += (item.value / total) * 100;
+    return `${CHART_COLORS[index % CHART_COLORS.length]} ${start}% ${cursor}%`;
+  }).join(', ');
+
+  return (
+    <section className="insight-chart" aria-label={visualization.title}>
+      <h4>{visualization.title}</h4>
+      {visualization.type === 'pie' ? (
+        <div className="pie-layout">
+          <div className="pie-chart" style={{ background: `conic-gradient(${gradient})` }} aria-hidden="true" />
+          <div className="chart-legend">
+            {visualization.data.map((item, index) => (
+              <div key={item.label}><i style={{ background: CHART_COLORS[index % CHART_COLORS.length] }} /><span>{item.label}</span><strong>{item.value}</strong></div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="bar-chart">
+          {visualization.data.map((item, index) => (
+            <div className="bar-row" key={item.label}>
+              <span>{item.label}</span>
+              <div><i style={{ width: `${Math.max(4, (item.value / maximum) * 100)}%`, background: CHART_COLORS[index % CHART_COLORS.length] }} /></div>
+              <strong>{item.value}</strong>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function ConnectScreen({ onConnected }) {
   const [pat, setPat] = useState('');
   const [loading, setLoading] = useState(false);
@@ -212,7 +252,7 @@ export default function App() {
         method: 'POST',
         body: JSON.stringify({ message: prompt, history: prior, team_key: teamKey }),
       });
-      setMessages((current) => [...current, { role: 'assistant', content: data.answer, warnings: data.warnings, jql: data.jql }]);
+      setMessages((current) => [...current, { role: 'assistant', content: data.answer, warnings: data.warnings, jql: data.jql, visualization: data.visualization }]);
       if (data.jql) {
         setJql(data.jql);
         setResult({ jql: data.jql, total: data.total || 0, page: 1, page_size: Math.max(data.issues.length, 25), issues: data.issues });
@@ -265,9 +305,9 @@ export default function App() {
             {!messages.length && (
               <div className="starter-grid">
                 {[
-                  'Show AIM Major issues and group them by progress',
-                  'Which AIM issues are waiting for an assignee?',
-                  'What changed most recently in AIM?',
+                  'Visualize the current AIM sprint by status',
+                  'Summarize the current AIM sprint',
+                  'Show Major AIM issues assigned to yuvraj',
                 ].map((starter) => <button key={starter} onClick={() => setQuestion(starter)}>{starter}<span>↗</span></button>)}
               </div>
             )}
@@ -276,6 +316,7 @@ export default function App() {
                 <article className={`message ${message.role}`} key={`${message.role}-${index}`}>
                   <span>{message.role === 'user' ? 'YOU' : 'AIM ASSISTANT'}</span>
                   <p className="preline">{message.content}</p>
+                  <InsightChart visualization={message.visualization} />
                   {message.warnings?.map((warning) => <div className="warning" key={warning}>{warning}</div>)}
                   {message.jql && <button className="jql-chip" onClick={() => { setJql(message.jql); setTab('jql'); }}>View and edit JQL →</button>}
                 </article>
@@ -284,7 +325,7 @@ export default function App() {
             </div>
             <form className="ask-box" onSubmit={ask}>
               <textarea value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask about AIM issues, priorities, owners, or progress…" rows="3" />
-              <div><small>Ollama · {activeTeam?.display_name || 'AIM'} · read only</small><button className="primary" disabled={busy || !question.trim()}>Ask Jira <span>→</span></button></div>
+              <div><small>OpenAI · {activeTeam?.display_name || 'AIM'} · read only</small><button className="primary" disabled={busy || !question.trim()}>Ask Jira <span>→</span></button></div>
             </form>
           </section>
         ) : (

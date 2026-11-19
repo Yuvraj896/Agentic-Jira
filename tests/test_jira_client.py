@@ -96,3 +96,26 @@ async def test_issue_detail_includes_comments_and_named_custom_fields() -> None:
     assert result.fields["Release Train"] == "R1"
     assert result.comments[0].body == "Waiting for logs"
     assert result.components == ["MCP"]
+
+
+@pytest.mark.asyncio
+async def test_find_assignable_users_uses_project_scoped_jira_lookup() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/user/assignable/search")
+        assert request.url.params["username"] == "yuvraj"
+        assert request.url.params["project"] == "AIM"
+        return httpx.Response(
+            200,
+            json=[
+                {
+                    "name": "ymandrah",
+                    "displayName": "Yuvraj Mandrah",
+                    "emailAddress": "yuvraj@example.test",
+                }
+            ],
+        )
+
+    users = await make_client(handler).find_assignable_users("yuvraj", "AIM")
+
+    assert users[0].username == "ymandrah"
+    assert users[0].display_name == "Yuvraj Mandrah"

@@ -7,7 +7,7 @@ from fastapi import Cookie, Depends, FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.agent import AgentService, OllamaError
+from backend.agent import AgentService, OpenAIError
 from backend.config import Settings, load_settings
 from backend.jira_client import JiraClient, JiraError
 from backend.models import (
@@ -44,10 +44,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         timeout_seconds=settings.jira_timeout_seconds,
     )
     app.state.agent = AgentService(
-        ollama_url=settings.ollama_url,
-        model=settings.ollama_model,
-        max_tool_calls=settings.agent_max_tool_calls,
-        summary_issue_limit=settings.agent_summary_issue_limit,
+        api_key=settings.openai_api_key,
+        base_url=settings.openai_base_url,
+        model=settings.openai_model,
+        timeout_seconds=settings.openai_timeout_seconds,
         teams=teams,
     )
 
@@ -87,7 +87,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "ok": True,
             "service": "jira-live",
             "jira_base_url": settings.jira_base_url,
-            "ollama_model": settings.ollama_model,
+            "llm_provider": "openai",
+            "openai_model": settings.openai_model,
+            "openai_configured": bool(settings.openai_api_key),
         }
 
     @app.post("/api/session/connect", response_model=ConnectionResponse)
@@ -178,8 +180,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except JiraError as exc:
             logger.warning("[AIM] Agent Jira request failed: %s", exc.public_message)
             raise HTTPException(status_code=exc.status_code, detail=exc.public_message) from exc
-        except OllamaError as exc:
-            logger.warning("[AIM] Agent Ollama request failed: %s", exc)
+        except OpenAIError as exc:
+            logger.warning("[AIM] Agent OpenAI request failed: %s", exc)
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         logger.info("[AIM] Agent request completed: total=%s", result.total)
         return result

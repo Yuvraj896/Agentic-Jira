@@ -84,6 +84,19 @@ input:focus, textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px 
 .message.thinking { color: var(--muted); }
 .warning { margin-top: 12px; padding: 9px 11px; background: #fff8d9; border-radius: 7px; font-size: 12px; }
 .jql-chip { border: 0; background: #e7eee9; color: var(--green-dark); padding: 8px 10px; margin-top: 13px; border-radius: 7px; font-size: 12px; font-weight: 700; }
+.insight-chart { margin-top: 16px; padding: 16px; border-radius: 10px; background: #f4f6f1; min-width: min(620px, 72vw); }
+.insight-chart h4 { margin: 0 0 16px; font-size: 14px; }
+.bar-chart { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: minmax(90px, 150px) 1fr 34px; align-items: center; gap: 10px; font-size: 12px; }
+.bar-row > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-row > div { height: 12px; background: #e1e6df; border-radius: 999px; overflow: hidden; }
+.bar-row i { display: block; height: 100%; border-radius: inherit; }
+.bar-row strong { text-align: right; }
+.pie-layout { display: flex; align-items: center; gap: 24px; }
+.pie-chart { width: 150px; height: 150px; border-radius: 50%; flex: 0 0 auto; box-shadow: inset 0 0 0 24px #f4f6f1; }
+.chart-legend { display: grid; gap: 8px; flex: 1; }
+.chart-legend > div { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 8px; font-size: 12px; }
+.chart-legend i { width: 9px; height: 9px; border-radius: 3px; }
 .ask-box { margin-top: 18px; border: 1px solid #bcc5be; background: white; border-radius: 15px; padding: 10px; box-shadow: 0 14px 40px rgba(27,45,36,.07); }
 .ask-box textarea { border: 0; resize: vertical; box-shadow: none; min-height: 78px; }
 .ask-box > div { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 2px 8px; }
@@ -160,4 +173,6 @@ td strong { color: var(--green); margin-right: 12px; }
   .detail-grid { grid-template-columns: 1fr; }
   .issue-drawer { padding: 32px 22px; }
   .field-list > div { grid-template-columns: 1fr; gap: 3px; }
+  .insight-chart { min-width: 0; width: 100%; }
+  .pie-layout { align-items: flex-start; flex-direction: column; }
 }

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, SecretStr, field_validator
 
@@ -111,9 +111,21 @@ class AgentRequest(BaseModel):
     team_key: str = "AIM"
 
 
+class ChartPoint(BaseModel):
+    label: str
+    value: int
+
+
+class Visualization(BaseModel):
+    type: Literal["bar", "pie"]
+    title: str
+    data: list[ChartPoint]
+
+
 class AgentResponse(BaseModel):
     answer: str
     jql: str = ""
     total: int | None = None
     issues: list[IssueSummary] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    visualization: Visualization | None = None

@@ -160,6 +160,36 @@ class JiraClient:
             if item.get("id") and item.get("name")
         ]
 
+    async def find_assignable_users(
+        self,
+        search_text: str,
+        project: str,
+        max_results: int = 10,
+    ) -> list[JiraUser]:
+        search_text = search_text.strip()
+        if not search_text:
+            return []
+        data = await self._request(
+            "GET",
+            "/user/assignable/search",
+            params={
+                "username": search_text,
+                "project": project,
+                "maxResults": min(50, max(1, max_results)),
+            },
+        )
+        if not isinstance(data, list):
+            raise JiraError("Jira returned an invalid user search response.", 502)
+        return [
+            JiraUser(
+                username=str(item.get("name") or item.get("key") or ""),
+                display_name=str(item.get("displayName") or item.get("name") or "Jira user"),
+                email=str(item.get("emailAddress") or ""),
+            )
+            for item in data
+            if isinstance(item, dict)
+        ]
+
     async def search_issues(self, jql: str, page: int = 1, page_size: int = 25) -> SearchResponse:
         jql = jql.strip()
         if not jql or len(jql) > 2000 or ";" in jql:
